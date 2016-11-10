@@ -1,4 +1,4 @@
-package dldl;
+
 import java.util.Scanner;
 public class E01 {
 	void run(){
