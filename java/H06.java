@@ -40,14 +40,30 @@ System.out.println(number[i]+"  " + number[j] +"  " +  pow_value[i][j]);
 }
 for(i=0; i< 5; i++){
 	for(j=0;j<5;j++){
-	if(pow_value[max_a][max_b] < pow_value[i][j]){
+	if(pow_value[max_a][max_b] < pow_value[i][j] &&i != j){
 		max_a = i; max_b = j; max = pow_value[max_a][max_b];
+		
 	}
 	
 		}
 		}
+for(i=0; i< 5; i++){
+	min = max;
+	min_a = max_a;
+	min_b= max_b;
+	for(j=0;j<5;j++){
+	if(pow_value[min_a][min_b] > pow_value[i][j] &&  i!=j){
+		min_a = i; min_b = j; min = pow_value[min_a][min_b];
+		
+	}
+	
+		}
+		}
+
 System.out.println("가장 큰 5개 수 조합은 " 
-		+ number[max_a] + "를 " +number[max_b]+ "번 곱한 " +max + "이다.");
+		+ number[max_a] + "를 " +number[max_b]+ "번 곱한 " + max + "이다.");
+System.out.println("가장 작 5개 수 조합은 " 
+		+ number[min_a] + "를 " +number[min_b]+ "번 곱한 " + min + "이다.");
 }
 
 	
@@ -58,3 +74,6 @@ public static void main(String [] args){
 	h.run();
 }
 }
+
+
+
