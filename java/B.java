@@ -1,27 +1,67 @@
-package dldl;
-import java.util.Scanner;
-public class B {
-	void run(){
-		Scanner s = new Scanner(System.in);
-		System.out.print("사과1개의가격을 입력하세요/");
-		int unit_price = s.nextInt();
-		System.out.print("사과의개수를 입력하세요/");
-		int apple_count=s.nextInt();
-		
-		if(apple_count > 30){
-			System.out.println("사과를 다 담을 수 없습니다.")
-			;
-			
-			
-		}else{
-System.out.println("행복");
-		}
+package dd;
+import java.io.Serializable;
+
+public class B implements Serializable {
+	private String isbn;
+	private String title;
+	private String author;
+	private int price;
+	
+	public B(String isbn, String title, String author, int price){
+		this.isbn = isbn;
+		this.title = title;
+		this.author = author;
+		this.price = price;
+	}
+
+	public String getAuthor() {
+		return author;
+	}
+
+	public String getIsbn() {
+		return isbn;
+	}
+
+	public int getPrice() {
+		return price;
+	}
+
+	public String getTitle() {
+		return title;
+	}
+
+	public void setAuthor(String author) {
+		this.author = author;
+	}
+
+	public void setIsbn(String isbn) {
+		this.isbn = isbn;
+	}
+
+	public void setPrice(int price) {
+		this.price = price;
+	}
+
+	public void setTitle(String title) {
+		this.title = title;
+	}
+	
+	boolean search_A(String author){
+		return this.author.contains(author);
+	}
+	boolean search_I(String Isbn){
+		return this.isbn.contains(isbn);
 		
 	}
-public static void main (String[] args){
-	B b = new B();
-	b.run();
-}
+	boolean search_P(int price){
+		return this.price <= price;
+	}
+	boolean search_T(String title){
+		return this.title.contains(title);
+	}
+	public String toString(){
+		return getIsbn() + "," + getTitle() + "," + getAuthor() + "," + getPrice();
+	}
 	
 
 }
