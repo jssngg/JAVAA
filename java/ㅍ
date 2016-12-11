@@ -1,0 +1,318 @@
+import java.net.*;				
+import java.io.*;				
+import java.util.*;				
+				
+public class ChatServer {				
+				
+	public static void main(String[] args) {			
+		try{		
+			ServerSocket server = new ServerSocket(10001);	
+//10001번 포트를 설정한 것이다. 
+			System.out.println("¡¢º”¿ª ±‚¥Ÿ∏≥¥œ¥Ÿ.");	
+			HashMap hm = new HashMap();	
+			while(true){	
+				Socket sock = server.accept();
+accept 함수는 TCP프로토콜을 이용하는 서버에서 클라이언트의 연결을 수락할 때 사용한다.대기하다가(블로킹상태) 클라이언트의 요청이 들어오면 클라이언트에 대한 소켓을 만든다. accept 함수에 클라이언트와 통신할 소켓을 반환한다. 
+극리고 객체를 만들어 소켓 해시맵넣어주고/ 실행시키기 /계속 반복각각의 쓰레드 만들어//
+				ChatThread chatthread = new ChatThread(sock, hm);
+ /  극리고 객체를 만들어 소켓 해시맵넣어주고/ 
+				chatthread.start();
+실행시키기 /계속 반복각각의 쓰레드 만들어/
+			} // while	
+		}catch(Exception e){	냄
+			System.out.println(e);
+		}	
+	} // main		
+}			
+			
+class ChatThread extends Thread{			
+	private Socket sock;
+	private String id;		
+	private BufferedReader br;		
+	private HashMap hm;		
+	private boolean initFlag = false;		
+	public ChatThread(Socket sock, HashMap hm){		
+		this.sock = sock;	//클라이언트랑 통신시켜줌
+		this.hm = hm;	
+		try{	//상대방에게 전송하려고 생성한 프라 // 아웃ㅁ 풋스트림 만들어서 넣어주
+			PrintWriter pw = new PrintWriter(new OutputStreamWriter(sock.getOutputStream()));	
+			br = new BufferedReader(new InputStreamReader(sock.getInputStream()));	
+			id = br.readLine();	//아이디를 받음
+			broadcast(id + "접속함");//접속한 클라이어느에게 모두 보냄
+			System.out.println("접속한 사람의 " + id + ": 이다");	// 써버의 콘솔창에 띄움
+			synchronized(hm){	
+				hm.put(this.id, pw);//해시맵에 아이디 넣음
+			}	
+			initFlag = true;	//초기화시킴
+		}catch(Exception ex){		
+			System.out.println(ex);	
+		}		
+	} // 생성자
+	public void run(){			
+		try{		
+			String line = null;	
+			while((line = br.readLine()) != null){	//반복문이용해서
+				if(line.equals("/quit"))	
+					break;
+				if(line.indexOf("/to ") == 0){	//라인이랑 키워드 비교해서 비교할 문자열이 라인의 어느위치에있는지 리턴 0이먄 ㅊ처므부터 같다고
+					sendmsg(line);
+				}else	
+					broadcast(id + " : " + line);//전부 보내는 거
+			}		
+		}catch(Exception ex){			
+			System.out.println(ex);		
+		}finally{			
+			synchronized(hm){		
+				hm.remove(id);	//종료시키는 거  아이디제외함
+			}		
+			broadcast(id + " : 접속 종료 .");
+			try{		
+				if(sock != null)//소켓이 널이 아니면 받아주는 거
+					sock.close();
+			}catch(Exception ex){}		
+		}			
+	} // run				
+	public void sendmsg(String msg){				
+		int start = msg.indexOf(" ") +1;//공백이 어디에 처음 나오는지  0 1 2 3 3    3번째 위치면 3 그리고 플러스 1을 해줌 그게 4
+		int end = msg.indexOf(" ", start);
+        // /to   id  message
+		if(end != -1){	//-1 : 공백이 없을 때 해당하는 문자열이 없을떄
+			String to = msg.substring(start, end);
+            //id
+			String msg2 = msg.substring(end+1);	//message 파트
+			Object obj = hm.get(to);//이걸이용해 프린트라이터를 가져옴
+			if(obj != null){		
+				PrintWriter pw = (PrintWriter)obj;	//널이 아니면 프린트라이터가 있으니 오브젝트로 받음
+				pw.println(id + "다음의  귓속만  보냄. :" + msg2);
+				pw.flush();//콘솔창에 출력//10시 53분 설명한 거 있음
+			} // if	
+		}		
+	} // sendmsg			
+	public void broadcast(String msg){			
+		synchronized(hm){		//
+			Collection collection = hm.values();	
+			Iterator iter = collection.iterator();	//처음부터 다음이 있ㄴ느지를 봄 해시넥스트와 함꼐
+			while(iter.hasNext()){	
+				PrintWriter pw = (PrintWriter)iter.next();//트루면 넥스트를 불러서 그거에 해당하는 프린트라이탈를 가져옴
+                
+                //아이디랑 상관없이 해시맵에 들어갈 데이터를 불러옴
+				pw.println(msg);
+				pw.flush();
+                //id1 , pw1
+                //id2 , pw2
+               // ...
+                //idn, pwn
+                
+			}	
+		}		
+	} // broadcast			
+}				
+
+
+
+
+
+
+
+
+
+import java.net.*;			
+import java.io.*;			
+			
+public class ChatClient {//클라이엍트
+			
+	public static void main(String[] args) {		
+		if(args.length != 2){	
+			System.out.println("ªÁøÎπ˝ : java ChatClient id ¡¢º”«“º≠πˆip");//알규먼트 아이디랑 (클라이언트) 서버 아이피를 받음//
+			System.exit(1);//들어오는 알규먼트가 2개여야하는데 숫자가 다르면 프로그램 종료
+		}	
+		Socket sock = null;	
+		BufferedReader br = null;	
+		PrintWriter pw = null;	//초기화
+		boolean endflag = false;	
+		try{	
+			sock = new Socket(args[1], 10001);
+			pw = new PrintWriter(new OutputStreamWriter(sock.getOutputStream()));//서버로 보내기
+			br = new BufferedReader(new InputStreamReader(sock.getInputStream()));	//인풋스트림으로부터 소켓의 만들어내는 건데 , 서버한테 데이터 받는 객체
+			BufferedReader keyboard = new BufferedReader(new InputStreamReader(System.in));	//무슨콘솔창에 받은 입력을 받았는지 가져오려고
+			// ªÁøÎ¿⁄¿« id∏¶ ¿¸º€«—¥Ÿ.		
+			pw.println(args[0]);//아이디
+			pw.flush();		
+			InputThread it = new InputThread(sock, br);		
+			it.start();		//동시에 돌아가는 쓰레드 서버로부터 데이터가 올텐데 반복문 이용해 출력하는 거
+			String line = null;		
+			while((line = keyboard.readLine()) != null){		
+				pw.println(line);	//와일부부니 메인쓰레드
+				pw.flush();	
+				if(line.equals("/quit")){	
+					endflag = true;//종료표시 그냥 아냐 예외보고 클라이언트가 제대로 종료했늦ㄴㅈ ㅣ뽀는거임
+                    
+					break;//번볻문 나옴
+				}	
+			}		
+			System.out.println("≈클라이언트 접속 종료 ");
+		}catch(Exception ex){			
+			if(!endflag)		
+				System.out.println(ex);	
+		}finally{			
+			try{		
+				if(pw != null)	
+					pw.close();
+			}catch(Exception ex){}		
+			try{		
+				if(br != null)	
+					br.close();
+			}catch(Exception ex){}		
+			try{		
+				if(sock != null)	
+					sock.close();
+			}catch(Exception ex){}		
+		} // finally			
+	} // main				
+} // class					
+					
+class InputThread extends Thread{					
+	private Socket sock = null;				
+	private BufferedReader br = null;				
+	public InputThread(Socket sock, BufferedReader br){		//파라미터로 들어오는 객체아오 ㅋㅋㅋㅋ
+		this.sock = sock;			
+		this.br = br;			
+	}				
+	public void run(){				
+		try{			
+			String line = null;		
+			while((line = br.readLine()) != null){		
+				System.out.println(line);	//눌이 아니면 출력함
+			}		
+		}catch(Exception ex){			
+		}finally{			
+			try{		
+				if(br != null)	
+					br.close();
+			}catch(Exception ex){}		
+			try{		
+				if(sock != null)	
+					sock.close();
+			}catch(Exception ex){}		
+		}			
+	} // InputThread				
+}					
+
+￼
+import java.net.*;				
+import java.io.*;				
+				
+public class EchoClient{				
+				
+	public static void main(String[] args) {			
+		try{		
+			Socket sock = new Socket("127.0.0.1", 10001);	
+			BufferedReader keyboard = new BufferedReader(new InputStreamReader(System.in));	
+			OutputStream out = sock.getOutputStream();	
+			InputStream in = sock.getInputStream();	
+			PrintWriter pw = new PrintWriter(new OutputStreamWriter(out));	
+			BufferedReader br = new BufferedReader(new InputStreamReader(in));	
+			String line = null;	
+			while((line = keyboard.readLine()) != null){	
+				if(line.equals("quit")) break;
+				pw.println(line);
+				pw.flush();
+				String echo = br.readLine();
+				System.out.println("º≠πˆ ∑Œ∫Œ≈Õ ¿¸¥ﬁπﬁ¿∫ πÆ¿⁄ø≠ :" + echo);
+			}	
+			pw.close();	
+			br.close();	
+			sock.close();	
+		}catch(Exception e){		
+			System.out.println(e);	
+		}		
+	} // main			
+}				
+
+￼
+import java.net.*;			
+import java.io.*;			
+			
+public class EchoServer {			
+			
+	public static void main(String[] args) {		
+		try{	
+			ServerSocket server = new ServerSocket(10001);
+			System.out.println("¡¢º”¿ª ±‚¥Ÿ∏≥¥œ¥Ÿ.");
+			Socket sock = server.accept();
+			InetAddress inetaddr = sock.getInetAddress();
+			System.out.println(inetaddr.getHostAddress() + " ∑Œ ∫Œ≈Õ ¡¢º”«œø¥Ω¿¥œ¥Ÿ.");
+			OutputStream out = sock.getOutputStream();
+			InputStream in = sock.getInputStream();
+			PrintWriter pw = new PrintWriter(new OutputStreamWriter(out));
+			BufferedReader br = new BufferedReader(new InputStreamReader(in));
+			String line = null;	
+			while((line = br.readLine()) != null){	
+				System.out.println("≈¨∂Û¿Ãæ∆Æ∑Œ ∫Œ≈Õ ¿¸º€πﬁ¿∫ πÆ¿⁄ø≠ : " + line);
+				pw.println(line);
+				pw.flush();
+			}	
+			pw.close();	
+			br.close();	
+			sock.close();	
+		}catch(Exception e){		
+			System.out.println(e);	
+		}		
+	} // main			
+}				
+
+
+￼
+
+
+import java.net.*;				
+import java.io.*;				
+				
+public class EchoThreadServer {				
+				
+	public static void main(String[] args) {			
+		try{		
+			ServerSocket server = new ServerSocket(10001);	
+			System.out.println("¡¢º”¿ª ±‚¥Ÿ∏≥¥œ¥Ÿ.");	
+			while(true){	
+				Socket sock = server.accept();
+				EchoThread echothread = new EchoThread(sock);
+				echothread.start();
+			} // while	
+		}catch(Exception e){		
+			System.out.println(e);	
+		}	
+	} // main		
+}			
+			
+class EchoThread extends Thread{			
+	private Socket sock;		
+	public EchoThread(Socket sock){		
+		this.sock = sock;	
+	} // ª˝º∫¿⁄		
+	public void run(){		
+		try{	
+			InetAddress inetaddr = sock.getInetAddress();
+			System.out.println(inetaddr.getHostAddress() + " ∑Œ ∫Œ≈Õ ¡¢º”«œø¥Ω¿¥œ¥Ÿ.");
+			OutputStream out = sock.getOutputStream();
+			InputStream in = sock.getInputStream();
+			PrintWriter pw = new PrintWriter(new OutputStreamWriter(out));
+			BufferedReader br = new BufferedReader(new InputStreamReader(in));	
+			String line = null;	
+			while((line = br.readLine()) != null){	
+				System.out.println("≈¨∂Û¿Ãæ∆Æ∑Œ ∫Œ≈Õ ¿¸º€πﬁ¿∫ πÆ¿⁄ø≠ : " + line);
+				pw.println(line);
+				pw.flush();
+			}	
+			pw.close();	
+			br.close();	
+			sock.close();	
+		}catch(Exception ex){		
+			System.out.println(ex);	
+		}		
+	} // run			
+}				
+
+
+
+
