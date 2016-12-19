@@ -1,0 +1,20 @@
+import java.net.*;
+public class ParseURL {
+	public static void main(String[] args) {
+		URL opinion = null;
+		URL homepage = null;
+		try{
+			homePage = new URL("http");
+			opinion = new URL(homePage, "opinion/editorial.htm");
+		}catch (MalformedURLExeption e){
+			System.out.println("잘못된 URL입니다.");
+			
+		}
+	System.out.println("Protocol = " + opinion.getProtocol());
+	System.out.println("HOst = " + opinion.getHost());
+	System.out.println("Port + " + opinion.getPort());
+	System.out.println("Path = " + opinion.getPath());
+	System.out.println("filename = " + opinion.getFile());
+	
+		}
+	}
